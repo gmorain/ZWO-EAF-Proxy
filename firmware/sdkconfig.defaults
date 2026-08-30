@@ -1,0 +1,19 @@
+CONFIG_IDF_TARGET="esp32s3"
+
+# The persona claims the native USB peripheral, so the console cannot use
+# USB-Serial-JTAG. Debugging goes over UART, which is also what the real EAF
+# does once its firmware takes over.
+CONFIG_ESP_CONSOLE_UART_DEFAULT=y
+
+# Device-side USB is not configured here. TinyUSB device support is the managed
+# component espressif/esp_tinyusb, added with `idf.py add-dependency`; the
+# built-in `usb` component is the host stack. An earlier CONFIG_TINYUSB_ENABLED
+# line here was not a real symbol and silently did nothing.
+
+# HID device class. CFG_TUD_HID derives from this. With it at 0 no class driver
+# claims the interface, SET_CONFIGURATION never completes its status stage, and
+# the host NAKs its way to a stall. Observed in captures/09-esp32-persona.pcap.
+#
+# sdkconfig.defaults is only read when sdkconfig does not exist. After editing
+# this file, delete sdkconfig and rebuild, or the change is silently ignored.
+CONFIG_TINYUSB_HID_COUNT=1

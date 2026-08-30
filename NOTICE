@@ -1,0 +1,17 @@
+ZWO-EAF-Proxy
+Copyright 2026 Gilles Morain
+
+Licensed under the Apache License, Version 2.0. See LICENSE.
+
+ZWO, ASIAIR and EAF are trademarks of ZWO. This project is not affiliated with,
+endorsed by, or supported by them. The names identify the hardware this software
+interoperates with, nothing more.
+
+The EAF protocol implemented here was derived from USB captures of a real device.
+Reverse engineering an interface for the sole purpose of interoperability is
+permitted in the EU under Directive 2009/24/EC Art. 6. This project reimplements
+an interface. It contains no ZWO firmware, SDK binaries, or code.
+
+This software drives motors attached to optical equipment, and flashing it
+replaces a device's identity on a USB bus. It is provided without warranty of any
+kind; see sections 7 and 8 of LICENSE.

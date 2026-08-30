@@ -1,0 +1,13 @@
+idf_component_register(
+    SRCS
+        "main.cpp"
+        "backends/simulated_focuser.cpp"
+        "personas/eaf_descriptors.cpp"
+        "personas/eaf_protocol.cpp"
+        "personas/eaf_persona.cpp"
+    INCLUDE_DIRS
+        "include"
+    REQUIRES
+        esp_driver_gpio
+        esp_timer
+)

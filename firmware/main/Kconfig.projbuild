@@ -1,0 +1,39 @@
+menu "ZWO EAF persona"
+
+    config EAF_SERIAL_HEX
+        string "Serial reported by register 0x0C"
+        default "6000aabbccddeeff"
+        help
+            Sixteen hex characters: 0x6000 followed by a six-byte MAC. A real
+            unit's value identifies that unit, so the default is a placeholder
+            and no unit's serial belongs in this repository.
+
+    config EAF_START_POSITION
+        int "Simulated focuser start position, in steps"
+        default 3000
+
+    config EAF_STEPS_PER_SECOND
+        int "Simulated focuser speed, in steps per second"
+        default 500
+
+    config EAF_FW_MAJOR
+        int "Firmware version reported by register 0x04: major"
+        default 3
+        help
+            The captured unit reported 3.8.2. Match the release the ASIAIR knows
+            about to stay quiet, or set a lower version to make it offer an
+            upgrade, which is the only known route to the update protocol.
+
+    config EAF_FW_MINOR
+        int "Firmware version: minor"
+        default 8
+
+    config EAF_FW_PATCH
+        int "Firmware version: patch"
+        default 2
+
+    config EAF_TEMPERATURE_CENTI
+        int "Reported temperature, in hundredths of a degree Celsius"
+        default 2150
+
+endmenu

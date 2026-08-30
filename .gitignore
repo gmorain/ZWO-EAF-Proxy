@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.ruff_cache/
+.pytest_cache/
+dist/
+*.egg-info/
+
+# ESP-IDF build artefacts. sdkconfig is generated from sdkconfig.defaults;
+# keeping it out means the target and options come from the tracked defaults.
+firmware/build/
+firmware/sdkconfig
+firmware/sdkconfig.old
+firmware/managed_components/
+firmware/dependencies.lock
+firmware/.vscode/
+
+# Captures (large, may contain device serials)
+captures/*.pcap
+captures/*.pcapng
+!captures/.gitkeep
+
+# macOS
+.DS_Store
+
+# Secrets
+.env
+
+# Working context for Claude Code, not release material
+CLAUDE.md
