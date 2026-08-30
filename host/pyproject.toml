@@ -1,6 +1,6 @@
 [project]
 name = "zwoproxy"
-version = "0.1.0"
+version = "0.1.1"
 description = "Host tooling for ZWO-EAF-Proxy: EAF capture decoding and protocol modelling"
 requires-python = ">=3.12"
 license = "Apache-2.0"

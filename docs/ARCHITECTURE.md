@@ -82,7 +82,7 @@ and therefore for the main target, but it does not gate a first working proxy.
 ### Order of work
 
 Two nearly-free tests came before any hardware purchase, because either could
-reshape the project. The first is answered; the second is not.
+reshape the project. Both are now answered.
 
 1. ~~**Host persona over Facedancer.**~~ **Tried, and it does not work.** The
    ASIAIR enumerates nothing that Moondancer presents, including Facedancer's own
@@ -95,9 +95,12 @@ reshape the project. The first is answered; the second is not.
    temperature, absolute moves, halt and zeroing. So Facedancer was the wrong
    vehicle, not the wrong protocol model. The desktop vehicle stays useful
    against macOS and Linux.
-2. **Pinefeat retarget test.** Over USB CDC from the Mac, decide whether the
-   pseudo-halt works. See [protocol/pinefeat.md](protocol/pinefeat.md). This
-   decides whether the main target is viable at all.
+2. ~~**Pinefeat retarget test.**~~ **Done, and it works.** Over USB CDC from the
+   Mac: the controller accepts a retarget mid-move and stops 11 to 12 steps past,
+   against the 353 steps a real EAF overshoots its own halt by. The main target
+   is viable. It also turned up two things the ASCOM driver does not document:
+   the lens must be in AF, and `c` is the only reliable way to detect that it is
+   not. See [protocol/pinefeat.md](protocol/pinefeat.md).
 
 Then, in order: probe the Gemini's HBX port; write the myFocuserPro2 host
 backend; pair it with the persona on a XIAO, which is the first complete proxy

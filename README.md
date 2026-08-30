@@ -47,7 +47,7 @@ one, and the real backends are next.
 - [x] Model the command set: position, absolute move, halt, temperature, identity, serial
 - [x] Emulate the device on ESP32-S3 and get the ASIAIR to enumerate it
 - [x] ASIAIR drives it: firmware 3.8.2, model EAFN, serial, temperature, moves, halt
-- [ ] Pinefeat retarget test: does the pseudo-halt work?
+- [x] Pinefeat retarget test: the pseudo-halt works, 11-12 steps against a 353-step envelope
 - [ ] Probe the Gemini's HBX port
 - [ ] myFocuserPro2 host backend
 - [ ] Persona on a XIAO with the myFocuserPro2 backend: first complete proxy, one board
@@ -115,6 +115,7 @@ lets the protocol be exercised without flashing anything.
 - `host/` uv-managed Python package: capture decoding, protocol models, and the
   persona over Facedancer
 - `docs/ARCHITECTURE.md` design and the USB host-vs-device conflict
+- `docs/optical-trains.md` per-train settings to record, and how to measure them
 - `docs/protocol/` reverse-engineering notes, one file per finding
 - `captures/` pcap captures, gitignored (large, and they carry device serials)
 
@@ -143,6 +144,10 @@ cd host && uv sync && uv run pytest
 presents the emulator from the desktop. Read
 [docs/protocol/capturing.md](docs/protocol/capturing.md) before capturing,
 especially the VBUS warning.
+
+`tools/probe_pinefeat.py` talks to a Pinefeat CEF over USB CDC with no
+microcontroller in the path, and `tools/fake_cef.py` runs it against a simulated
+controller so it can be changed with no hardware attached.
 
 ## Firmware
 
