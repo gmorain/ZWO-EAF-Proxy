@@ -26,7 +26,7 @@ side has already claimed it. An RP2040-based board may solve this once tested.
                             │
                             v
   ASIAIR ──USB──>  XIAO ESP32-S3  ──UART──>  focuser with a serial port
-                   (EAF persona)             myFocuserPro2, Gemini via HBX
+                   (EAF persona)             myFocuserPro2
                             │
                             └────UART──>  XIAO ESP32-S3  ──USB host──>  USB-only focuser
                                           (board B)                     Pinefeat CEF
@@ -48,7 +48,6 @@ one, and the real backends are next.
 - [x] Emulate the device on ESP32-S3 and get the ASIAIR to enumerate it
 - [x] ASIAIR drives it: firmware 3.8.2, model EAFN, serial, temperature, moves, halt
 - [x] Pinefeat retarget test: the pseudo-halt works, 11-12 steps against a 353-step envelope
-- [ ] Probe the Gemini's HBX port
 - [ ] myFocuserPro2 host backend
 - [ ] Persona on a XIAO with the myFocuserPro2 backend: first complete proxy, one board
 - [ ] Pinefeat backend (needs a second board for USB host, or a RP2040-based board)
@@ -126,7 +125,7 @@ None are written yet. The persona drives a simulated focuser today.
 | Backend | Where | Transport | Why this order |
 |---|---|---|---|
 | Pinefeat CEF | firmware | USB CDC, sealed case | **main target**: focus and aperture on a Canon EF lens |
-| Gemini EAF | firmware | sealed case; try HBX, else a USB host | equal target: the device that motivated the project |
+| Gemini EAF | firmware | sealed case, needs a USB host | equal target: the device that motivated the project |
 | myFocuserPro2 | host, then firmware | UART tap, DIY board | last by usefulness, first by reachability |
 
 myFocuserPro2 is the only backend needing nothing but a UART, which makes it the

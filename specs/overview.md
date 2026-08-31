@@ -72,8 +72,8 @@ be host or device, not both. The persona claims it, so no backend can use USB.
 All three focusers are USB devices and only myFocuserPro2 can be opened to tap
 its UART, which makes it the only backend that runs on a single board. The
 Pinefeat needs a USB host outright, most likely a second ESP32-S3 bridged over
-UART. The Gemini may escape that through its HBX hand-controller port, worth
-testing before anything is designed. This is the one choice that is expensive to
+UART. The Gemini needs one too: its HBX socket takes an IR receiver, which is
+input-only and reports no position. This is the one choice that is expensive to
 reverse.
 
 The host module is designed to work in both directions. On the device side it

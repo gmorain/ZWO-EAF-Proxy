@@ -59,7 +59,7 @@ All three get firmware backends. myFocuserPro2 lands in the host module first.
 | Backend | Where it lives | Transport | Framing |
 |---|---|---|---|
 | Pinefeat CEF | firmware | USB CDC, sealed case, needs board B | ASCII, LF-terminated, e.g. `m5200` |
-| Gemini EAF | firmware | sealed case; try HBX, else board B | unknown, ships its own ASCOM driver |
+| Gemini EAF | firmware | sealed case, needs board B | unknown, ships its own ASCOM driver |
 | myFocuserPro2 | host first, then firmware | UART tap, DIY board | ASCII, `:cmd#` |
 
 **Pinefeat is the main target by usefulness.** It gives an ASIAIR focus and
@@ -102,8 +102,7 @@ reshape the project. Both are now answered.
    the lens must be in AF, and `c` is the only reliable way to detect that it is
    not. See [protocol/pinefeat.md](protocol/pinefeat.md).
 
-Then, in order: probe the Gemini's HBX port; write the myFocuserPro2 host
-backend; pair it with the persona on a XIAO, which is the first complete proxy
+Then, in order: write the myFocuserPro2 host backend; pair it with the persona on a XIAO, which is the first complete proxy
 and needs one board; add board B and the Pinefeat backend; add the Gemini backend
 over whichever transport won.
 
@@ -113,7 +112,8 @@ it: everything demonstrated so far sits on a simulated one.
 ### Gemini EAF
 
 Not the Optec Gemini. A ~65 EUR ZWO EAF knockoff: same bracket hole pattern,
-same port layout (TEMP jack, USB-B, HBX hand controller), USB-powered 5V.
+same port layout (TEMP jack, USB-B, HBX), USB-powered 5V. The HBX socket takes
+an IR receiver driven by a handset, not a hand controller.
 
 It ships its own ASCOM driver and works with NINA, KStars and SharpCap, but
 **not with the ASIAIR**. That is the whole reason this project exists, and it
@@ -132,9 +132,10 @@ Worth ruling out first: read its descriptors. If it turns out to clone ZWO's
 VID/PID and the ASIAIR rejects it for some other reason, the project collapses
 into something much smaller than a full emulation.
 
-Its case is sealed metal, so there is no UART to tap inside. The **HBX hand
-controller port** is the way in worth trying first; see
-[Try the Gemini's HBX port first](#try-the-geminis-hbx-port-first).
+Its case is sealed metal, so there is no UART to tap inside, and its HBX socket
+is an IR input rather than a way in; see [The HBX port is not a way
+in](#the-hbx-port-is-not-a-way-in). USB-B is the only control interface, so the
+Gemini needs board B exactly as the Pinefeat does.
 
 ## Temperature
 
@@ -220,33 +221,36 @@ build.
 | Backend | Enclosure | Backend transport |
 |---|---|---|
 | myFocuserPro2 | DIY, open | UART tap upstream of its USB-serial bridge. The one backend needing no extra hardware |
-| Gemini EAF | sealed metal | **HBX port if it carries serial**, otherwise a USB host |
+| Gemini EAF | sealed metal | needs a **USB host** on the backend side |
 | Pinefeat CEF | sealed metal | needs a **USB host** on the backend side |
 
 So the real constraint is not "tap a UART", it is: **the sealed backends need a
-second USB port that the ESP32-S3 does not have**, unless another externally
-accessible port gets there first. That is a hardware decision, not a backend
-detail to settle later. The Pinefeat needs it outright. The Gemini may not, which
-is why its HBX port is worth checking before anything is designed.
+second USB port that the ESP32-S3 does not have**. That is a hardware decision,
+not a backend detail to settle later, and both sealed backends need it.
 
-### Try the Gemini's HBX port first
+### The HBX port is not a way in
 
-Before designing in a second USB port, check whether the Gemini needs one at all.
-Its port layout is TEMP jack, USB-B, and an **HBX hand controller** socket. A hand
-controller port is externally accessible and is very likely a plain UART or I2C,
-which is how ZWO's own EAF drives its hand controller.
+The socket was assumed to be a hand controller port, which would very likely have
+carried a plain UART. It does not: the accessory it takes is an **IR receiver
+driven by a handset**, so the line is an input carrying demodulated remote codes.
 
-If the Gemini's HBX carries something tappable, the motivating device is solved
-with a cable: no case opening, no USB host, no extra silicon. That would leave
-only the Pinefeat needing board B, and it is a cheap experiment either way.
+Driving it would be cheap, one GPIO bit-banging the waveform, no USB host at all.
+It still cannot work. An IR input is one-way and a handset issues discrete
+commands, so there is no position to read back. A backend on that port could only
+dead-reckon by counting what it sent, with no absolute reference, no way to
+notice a missed step, and no way to see the focuser moved by the handset itself.
 
-Cheap to test. Put a logic analyser or scope on the HBX pins while the Gemini's
-own ASCOM driver drives the focuser, and look for serial. **Do this before
-committing to any of the options below.**
+The EAF protocol is absolute throughout: the host commands a target and reads
+back where the focuser is. Reporting a dead-reckoned number is fabricating a
+value, which this project does not do. So the Gemini needs board B like the
+Pinefeat, and the cheap escape route is closed.
+
+A scope on the pins would confirm the line is only IR, in case the socket carries
+more than the documented accessory uses.
 
 ### Options for a backend USB host
 
-Needed for the Pinefeat regardless, and for the Gemini if HBX comes to nothing.
+Needed by both sealed backends, the Pinefeat and the Gemini.
 
 1. **Two ESP32-S3 back to back.** Board A is the persona (USB device to the
    ASIAIR), board B is USB host to the focuser, and they meet over UART. Best
@@ -316,8 +320,7 @@ Silicon, so the development machine does not decide this. What decides it is tha
 the USB host VCP components are ESP-IDF components: trivial to add with
 `idf.py add-dependency`, fiddly from Arduino-under-PlatformIO.
 
-The Pinefeat is the main target and it needs a USB host whatever happens with the
-Gemini's HBX port. So **ESP-IDF** is the choice for the ESP32-S3 vehicle: both USB
+Both sealed backends need a USB host. So **ESP-IDF** is the choice for the ESP32-S3 vehicle: both USB
 roles first-class, no dependency on the community PlatformIO fork that tracks
 IDF 5.x.
 
