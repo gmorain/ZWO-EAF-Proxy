@@ -58,6 +58,7 @@ All three get firmware backends. myFocuserPro2 lands in the host module first.
 
 | Backend | Where it lives | Transport | Framing |
 |---|---|---|---|
+| Stepper on a ULN2003 | firmware | four GPIO, no controller | none, the backend steps the motor |
 | Pinefeat CEF | firmware | USB CDC, sealed case, needs board B | ASCII, LF-terminated, e.g. `m5200` |
 | Gemini EAF | firmware | sealed case, needs board B | unknown, ships its own ASCOM driver |
 | myFocuserPro2 | host first, then firmware | UART tap, DIY board | ASCII, `:cmd#` |
@@ -67,17 +68,18 @@ aperture control over a Canon EF lens, which is a capability gap rather than a
 substitution. The Gemini matters equally: it is the device that motivated the
 project, and the ASIAIR's refusal to drive it is why any of this exists.
 
-**myFocuserPro2 is last by usefulness and first by reachability.** Its OTA is
-rarely used, so nobody is waiting on it, but it is the only backend needing
-nothing more than a UART. It goes into the host module first, where it exercises
-the `Focuser` interface against real hardware and gives something concrete to
-diff proxied behaviour against. A firmware backend follows.
+**The stepper backend comes first.** It drives a 28BYJ-48 through a ULN2003 from
+four GPIO, so there is no controller, no dialect and no second board: persona,
+interface and a real focuser on one XIAO, already fitted to two scopes. See
+`specs/features/003-direct-stepper-backend.md`.
 
-That ordering is worth stating plainly, because the two axes point opposite ways.
-**myFocuserPro2 is the only backend that runs on a single XIAO**, so it is the
-cheapest route to a complete working proxy in firmware: persona, interface and a
-real focuser, one board, no USB host. Board B is still required for the Pinefeat
-and therefore for the main target, but it does not gate a first working proxy.
+**myFocuserPro2 is last by usefulness.** Its OTA is rarely used, so nobody is
+waiting on it, but it needs nothing more than a UART and it exercises the
+`Focuser` interface against a real dialect, which the stepper path never does.
+Host module first, then firmware.
+
+Board B is still required for the Pinefeat and therefore for the main target, but
+it does not gate a first working proxy.
 
 ### Order of work
 
@@ -102,9 +104,9 @@ reshape the project. Both are now answered.
    the lens must be in AF, and `c` is the only reliable way to detect that it is
    not. See [protocol/pinefeat.md](protocol/pinefeat.md).
 
-Then, in order: write the myFocuserPro2 host backend; pair it with the persona on a XIAO, which is the first complete proxy
-and needs one board; add board B and the Pinefeat backend; add the Gemini backend
-over whichever transport won.
+Then, in order: the stepper backend, which is the first complete proxy and needs
+one board; the myFocuserPro2 backend, host module then firmware; board B and the
+Pinefeat backend; the Gemini backend over whichever transport won.
 
 The persona side of that XIAO step is done. What remains is a real focuser behind
 it: everything demonstrated so far sits on a simulated one.
@@ -182,11 +184,12 @@ are spent before anything else. Nine remain.
 |---|---|
 | Temperature probe, DS18B20 on 1-Wire | 1 |
 | Zero button, to ground on an internal pull-up | 1 |
+| Stepper through a ULN2003, IN1..IN4 | 4 |
 | Backend over UART: myFocuserPro2, or a link to a second board | 2 |
 | Backend over PIO-USB instead, on an RP2040 | 2, replacing the UART |
 
-Four of nine either way. Not a constraint. The MAX3421E option was the only
-cramped one, wanting six pins by itself.
+Six of nine for the stepper backend, four for the others. Not a constraint. The
+MAX3421E option was the only cramped one, wanting six pins by itself.
 
 Three constraints on the wiring:
 
@@ -205,7 +208,9 @@ accident mid-session has no undo.
 This has a protocol counterpart. Byte 6 of register `0x03` is the sync flag: a
 write with `b0=0, b6=1` sets the current position, which is how the ASIAIR zeroes
 a focuser; see [protocol/registers.md](protocol/registers.md). The host can
-already zero it, so the button is a local equivalent.
+already zero it, so the button is a local equivalent. A press reaches the host
+within about a second through the ~1 Hz state poll, though nothing announces it:
+the protocol gives a device no way to tell a host anything.
 
 ## The USB conflict
 

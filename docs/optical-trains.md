@@ -37,6 +37,11 @@ identical at infinity, so `~3800` is the middle of a plateau spanning roughly
 3700 to 3860, not a peak. The width is the useful part: it is the focus tolerance
 the autofocus step has to stay under.
 
+A lens controller needs every column, since travel and infinity change with the
+glass and the focal length. A focuser wired directly to a proxy board needs only
+the autofocus step and Reverse: everything else is fixed for that scope and lives
+on the board.
+
 **Reference**, read off the controller: `a`, travel, infinity, headroom.
 **Set in the ASIAIR**: AF step, Reverse.
 **Set by the proxy**: aperture. The default is computed; override it here once

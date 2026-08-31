@@ -16,17 +16,19 @@ Only the entry point is chip-specific. Descriptors, protocol and the focuser
 interface are shared and their tests build without an embedded toolchain. See
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-How the focuser is reached depends on what it exposes. One board is enough for
-anything with a reachable serial port. A USB-only focuser needs a second board
-acting as USB host, because the S3 has a single USB peripheral and the persona
-side has already claimed it. An RP2040-based board may solve this once tested.
+How the focuser is reached depends on what it exposes. A stepper on a ULN2003 is
+driven straight from the board, and anything with a reachable serial port needs
+one board too. A USB-only focuser needs a second board acting as USB host,
+because the S3 has a single USB peripheral and the persona side has already
+claimed it. An RP2040-based board may solve this once tested.
 
 ```
                      DS18B20 temp probe
                             │
                             v
-  ASIAIR ──USB──>  XIAO ESP32-S3  ──UART──>  focuser with a serial port
-                   (EAF persona)             myFocuserPro2
+  ASIAIR ──USB──>  XIAO ESP32-S3  ──GPIO──>  ULN2003 and a stepper
+  zero button ──>  (EAF persona)   ──UART──>  focuser with a serial port
+                                              myFocuserPro2
                             │
                             └────UART──>  XIAO ESP32-S3  ──USB host──>  USB-only focuser
                                           (board B)                     Pinefeat CEF
@@ -35,6 +37,11 @@ side has already claimed it. An RP2040-based board may solve this once tested.
 The temperature probe is not decoration. The ASIAIR uses focuser temperature for
 autofocus compensation, and a Canon EF lens on a Pinefeat has no sensor at all,
 so the proxy supplies a real one.
+
+The zero button is optional and sets the current position to zero, the same thing
+the ASIAIR's own zero does. It matters where the focuser can be moved by hand: an
+internal-focus tube admits no home switch, so recovering a lost origin means
+racking to the zero end and saying so.
 
 ## Status
 
@@ -48,8 +55,8 @@ one, and the real backends are next.
 - [x] Emulate the device on ESP32-S3 and get the ASIAIR to enumerate it
 - [x] ASIAIR drives it: firmware 3.8.2, model EAFN, serial, temperature, moves, halt
 - [x] Pinefeat retarget test: the pseudo-halt works, 11-12 steps against a 353-step envelope
+- [ ] Stepper backend on a ULN2003: first complete proxy, one board
 - [ ] myFocuserPro2 host backend
-- [ ] Persona on a XIAO with the myFocuserPro2 backend: first complete proxy, one board
 - [ ] Pinefeat backend (needs a second board for USB host, or a RP2040-based board)
 - [ ] Gemini backend
 - [ ] Temperature probe on the proxy, for backends that have none
@@ -124,13 +131,15 @@ None are written yet. The persona drives a simulated focuser today.
 
 | Backend | Where | Transport | Why this order |
 |---|---|---|---|
+| Stepper on a ULN2003 | firmware | four GPIO, no controller | **first**: the whole proxy on one board, already fitted to two scopes |
 | Pinefeat CEF | firmware | USB CDC, sealed case | **main target**: focus and aperture on a Canon EF lens |
 | Gemini EAF | firmware | sealed case, needs a USB host | equal target: the device that motivated the project |
-| myFocuserPro2 | host, then firmware | UART tap, DIY board | last by usefulness, first by reachability |
+| myFocuserPro2 | host, then firmware | UART tap, DIY board | last by usefulness |
 
-myFocuserPro2 is the only backend needing nothing but a UART, which makes it the
-cheapest route to a complete proxy on one board. It goes into the host module
-first, to exercise the interface against real hardware. See
+Driving a stepper directly needs no controller at all, which makes it the
+cheapest route to a complete proxy on one board and the first backend to write.
+myFocuserPro2 goes into the host module after it, to exercise the interface
+against a real dialect. See
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Host tooling

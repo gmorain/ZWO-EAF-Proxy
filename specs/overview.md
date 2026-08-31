@@ -31,9 +31,11 @@ separate repository that duplicates the parts worth reusing.
 - Firmware backends for the Pinefeat CEF (focus and aperture on a Canon EF lens,
   the main target by usefulness) and the Gemini (the cheap ZWO EAF clone the
   ASIAIR refuses, which is what motivated the project).
+- A backend that drives a stepper directly through a ULN2003, with no second
+  controller in the path. The whole proxy on one board, and the shortest route to
+  a working one.
 - A myFocuserPro2 backend, in the host module first and in firmware after. Its
-  OTA is rarely used so nobody is waiting on it, but it needs only a UART, which
-  makes it the cheapest route to a complete proxy on one board.
+  OTA is rarely used so nobody is waiting on it, and it needs only a UART.
 - A temperature probe on the proxy itself, so backends without one still support
   the ASIAIR's autofocus temperature compensation.
 - The EAF protocol documented in `docs/protocol/`, derived from captures rather
@@ -44,7 +46,9 @@ separate repository that duplicates the parts worth reusing.
 ## Out of scope
 
 - ASCOM and INDI drivers. The target is the ASIAIR, and the supported focusers
-  already ship desktop drivers.
+  already ship desktop drivers. A faithful EAF is driven by ZWO's own ASCOM and
+  INDI drivers regardless, so NINA and KStars come free; that is a consequence of
+  emulating well, not a thing built here.
 - ZWO cameras and mounts. The proxy emulates focuser-class accessories only.
 - Wi-Fi, Bluetooth, and network control on the ESP32. USB only.
 - Redistributing ZWO firmware, SDK binaries, or decompiled code. This
@@ -67,14 +71,22 @@ hand. Adding a focuser is a backend, which is the only axis that grows here. A
 backend that cannot answer a query reports unsupported instead of fabricating a
 value, and the persona decides what to tell the ASIAIR.
 
+One board is dedicated to each telescope and left attached to it. Position,
+travel limits and calibration belong to that focuser, nothing upstream remembers
+them, and a microcontroller costs a fraction of the focuser it drives. The serial
+is derived from the board's own MAC at runtime, as the real device does, so every
+proxy is distinguishable with no configuration. That stores a scope's whole state
+only where the mechanism is fixed; a lens controller's travel changes with the
+glass on it, so those values stay per configuration. See
+`specs/decisions/0003-one-board-per-telescope.md`.
+
 The dominant constraint is that the ESP32-S3 has one USB-OTG peripheral and can
 be host or device, not both. The persona claims it, so no backend can use USB.
-All three focusers are USB devices and only myFocuserPro2 can be opened to tap
-its UART, which makes it the only backend that runs on a single board. The
-Pinefeat needs a USB host outright, most likely a second ESP32-S3 bridged over
-UART. The Gemini needs one too: its HBX socket takes an IR receiver, which is
-input-only and reports no position. This is the one choice that is expensive to
-reverse.
+That binds only the backends that are themselves USB devices. A stepper driven
+straight from four GPIO is unaffected, and myFocuserPro2 can be opened to tap its
+UART, so both run on a single board. The Pinefeat needs a USB host outright, most
+likely a second ESP32-S3 bridged over UART. The Gemini needs one too: 
+its HBX socket takes an IR receiver, which is input-only and reports no position. 
 
 The host module is designed to work in both directions. On the device side it
 presents as a ZWO device from a desktop through a Cynthion, since a desktop has
